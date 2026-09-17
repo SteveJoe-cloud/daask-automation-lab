@@ -1,0 +1,144 @@
+{
+  "name": "Follow up digest system",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6c251ff4-d469-4be4-ade0-664be2bf4a85",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1GJiLpYCt7dk2iKMUEwH6oehbD4sCGzzYEM6ZftdyB3s",
+          "mode": "list",
+          "cachedResultName": "Leads Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GJiLpYCt7dk2iKMUEwH6oehbD4sCGzzYEM6ZftdyB3s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GJiLpYCt7dk2iKMUEwH6oehbD4sCGzzYEM6ZftdyB3s/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "2329c5f2-0fdb-411a-84a8-4c7f70736cfd",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DX9u6N1QudjzDKYt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const today = new Date().toISOString().split('T')[0]; // e.g. \"2026-08-31\"\nconst excludedStages = ['Client', 'Retainer', 'Lost'];\n\nconst due = items.filter(item => {\n  const d = item.json;\n  const followUp = (d['Next Follow-up Date'] || '').toString().slice(0, 10); // keep to YYYY-MM-DD\n  const stage = d['Stage'] || '';\n  return followUp && followUp <= today && !excludedStages.includes(stage);\n});\n\nlet message;\nif (due.length === 0) {\n  message = \"No follow-ups due today.\";\n} else {\n  const lines = due.map(item => {\n    const d = item.json;\n    return `• ${d['Name']} (${d['Sector'] || 'N/A'}) — Stage: ${d['Stage']}, due ${d['Next Follow-up Date']}`;\n  });\n  message = `Follow-ups due today (${due.length}):\\n\\n${lines.join('\\n')}`;\n}\n\nreturn [{ json: { message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "57ad8f99-9758-4ef1-b30a-b0e611533bba",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "7876719873",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        656,
+        0
+      ],
+      "id": "30af0833-6fdf-4522-a4a5-9f266a9585ea",
+      "name": "Send a text message",
+      "webhookId": "771d402e-5ad6-43aa-b723-2deab213fdad",
+      "credentials": {
+        "telegramApi": {
+          "id": "vLgyhbO03v0OXSCu",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "22f25567-3a58-4119-8b02-a470236d104a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b665cb047bd9e1e2f104431a15367fbc56cea2c74cd7e4d0795661a9356d507b"
+  },
+  "nodeGroups": [],
+  "id": "fEo4OjvsP1oa9dvE",
+  "tags": []
+}
