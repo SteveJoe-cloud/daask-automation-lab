@@ -1,0 +1,348 @@
+{
+  "name": "Invoice Reminder tool",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "846f7351-8877-4b25-a00e-89a4cb436e2d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1-lcykVHh9QMV31S69RL6aNkMw75H3X0VIr_xfiRYcUo",
+          "mode": "list",
+          "cachedResultName": "Invoices Spreadsheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-lcykVHh9QMV31S69RL6aNkMw75H3X0VIr_xfiRYcUo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-lcykVHh9QMV31S69RL6aNkMw75H3X0VIr_xfiRYcUo/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "07c28d72-58a3-4dbf-b501-34e70014d568",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DX9u6N1QudjzDKYt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const today = new Date();\ntoday.setHours(0, 0, 0, 0); \n\nconst outputItems = [];\nconst escalations = [];\nconst rejected = []; \n\nitems.forEach(item => {\n  const d = item.json;\n  const status = (d['Status'] || '').toString().trim().toLowerCase();\n  const rawDueDate = d['Due Date'];\n  \n  let dueDate = new Date(rawDueDate);\n  let isValidDate = !isNaN(dueDate.getTime());\n  \n  if (isValidDate) dueDate.setHours(0, 0, 0, 0);\n  \n  if (isValidDate && dueDate <= today && status === 'unpaid') {\n    const daysOverdue = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));\n    const contact = (d['Client Contact'] || '').toString().trim();\n    \n    // CHECK: Does the contact field have an '@' symbol?\n    \n    const isEmail = contact.includes('@');\n    \n    // Assign type based on whether it's an email or a phone/username\n    const reminderType = isEmail ? 'reminder_email' : 'reminder_telegram';\n\n    const messageBody = `Hi ${d['Client Name']},<br><br>\nThis is a reminder that invoice ${d['Invoice Number']} for KES ${d['Amount (KES)']} was due on ${rawDueDate} and remains unpaid.<br><br>\nAs an eTIMS-compliant business, this invoice has already been transmitted to the KRA portal. If you need us to resend the official eTIMS-compliant copy for your processing, just reply to this email and we'll send it right over.<br><br>\nCould you please let us know when we can expect payment? If it's already sorted, please ignore this reminder.<br><br>\nThanks for your business,<br>\nThe Finance Team`;\n\n    outputItems.push({\n      json: {\n        type: reminderType,\n        to: contact,\n        clientName: d['Client Name'],\n        invoiceNumber: d['Invoice Number'],\n        amount: d['Amount (KES)'],\n        dueDate: rawDueDate,\n        daysOverdue,\n        subject: `Reminder: Invoice ${d['Invoice Number']} is overdue`,\n        body: messageBody\n      }\n    });\n\n    if (daysOverdue >= 14) {\n      escalations.push(`• ${d['Client Name']} — Invoice ${d['Invoice Number']}, KES ${d['Amount (KES)']}, ${daysOverdue} days overdue`);\n    }\n  } else {\n    let reason = !isValidDate ? 'Invalid Date Format' : (dueDate > today ? 'Date is in the future' : `Status is '${status}', not 'unpaid'`);\n    rejected.push({ client: d['Client Name'], status: status, rawDueDate: rawDueDate, reason: reason });\n  }\n});\n\nconst summaryMessage = outputItems.length === 0\n  ? `No overdue invoices today. Rejected ${rejected.length} item(s): ${JSON.stringify(rejected)}`\n  : `${outputItems.length} overdue invoice(s) today, ${escalations.length} at 14+ days.`;\n\noutputItems.push({ json: { type: 'summary', message: summaryMessage } });\n\nif (escalations.length > 0) {\n  outputItems.push({ json: { type: 'escalation', message: `Invoices overdue 14+ days (${escalations.length}):\\n\\n${escalations.join('\\n')}` } });\n}\n\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "a9c9c0e6-f8e3-45bb-84cc-49b8f5d687c1",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.type}}",
+                    "rightValue": "reminder_email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "10a7a72d-1d69-40a9-92f0-cbc3c488bc57"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d9fee959-d6c8-42bf-ade1-75929aa8ba9a",
+                    "leftValue": "={{$json.type}}",
+                    "rightValue": "escalation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "bb7af0cc-9373-4930-8650-8cec1e830a3c",
+                    "leftValue": "={{$json.type}}",
+                    "rightValue": "summary",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "54bd637e-7f6f-4edb-bf7e-0cf64b7afdf1",
+                    "leftValue": "={{$json.type}}",
+                    "rightValue": "reminder_telegram",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        -32
+      ],
+      "id": "fa272f30-f01f-44d9-9960-64f119b5aeea",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        -208
+      ],
+      "id": "037d9792-b9b7-4b65-99e2-fb389229dd6c",
+      "name": "Reminder Email",
+      "webhookId": "70205644-336f-4916-9291-7fc66623e392",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "cEHuSaLfJGbTaEIp",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7876719873",
+        "text": "={{ $json.to }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        896,
+        288
+      ],
+      "id": "8bf999f2-8076-4282-9e16-dff0ede88ea1",
+      "name": "Reminder Telegram",
+      "webhookId": "b9aeaf0f-ecb5-4977-bf65-c4375ebbd45c",
+      "credentials": {
+        "telegramApi": {
+          "id": "vLgyhbO03v0OXSCu",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7876719873",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        896,
+        -48
+      ],
+      "id": "28b2e176-178b-47fc-89b8-bf44c15cbb9a",
+      "name": "Escalation Message",
+      "webhookId": "b9aeaf0f-ecb5-4977-bf65-c4375ebbd45c",
+      "credentials": {
+        "telegramApi": {
+          "id": "vLgyhbO03v0OXSCu",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7876719873",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        896,
+        128
+      ],
+      "id": "5aa48328-d3c3-417d-80bd-4b439acc00f2",
+      "name": "Summary Message",
+      "webhookId": "b9aeaf0f-ecb5-4977-bf65-c4375ebbd45c",
+      "credentials": {
+        "telegramApi": {
+          "id": "vLgyhbO03v0OXSCu",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Reminder Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Escalation Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Summary Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reminder Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "acab1d07-eeb4-4f28-b0cb-6cec7c65d962",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b665cb047bd9e1e2f104431a15367fbc56cea2c74cd7e4d0795661a9356d507b"
+  },
+  "nodeGroups": [],
+  "id": "TAZZLdNSYcNC1OUJ",
+  "tags": []
+}
