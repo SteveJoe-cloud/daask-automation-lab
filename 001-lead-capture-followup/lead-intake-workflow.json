@@ -1,0 +1,448 @@
+{
+  "name": "Lead Intake & Notification",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1GJiLpYCt7dk2iKMUEwH6oehbD4sCGzzYEM6ZftdyB3s",
+          "mode": "list",
+          "cachedResultName": "Leads Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GJiLpYCt7dk2iKMUEwH6oehbD4sCGzzYEM6ZftdyB3s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1707796741,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GJiLpYCt7dk2iKMUEwH6oehbD4sCGzzYEM6ZftdyB3s/edit#gid=1707796741"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "52ec94b4-acd6-4b5c-b0f6-441dff5bdfe9",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "gY1KgpcaIcYYjrNR",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1ff54a74-32c3-4171-97ba-9bf4b2f4f170",
+              "name": "Timestamp",
+              "value": "={{ $json.Timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "e42cafa2-04f1-4621-9d58-ca2db4c4c2b8",
+              "name": "Name",
+              "value": "={{ $json.Name }}",
+              "type": "string"
+            },
+            {
+              "id": "7ed0a760-8dce-4c1a-8c81-244af8060833",
+              "name": "Contact",
+              "value": "={{ $json.Contact }}",
+              "type": "string"
+            },
+            {
+              "id": "bb8fd447-07d9-45b4-8b2e-94283565b4f9",
+              "name": "Source",
+              "value": "=Google Form",
+              "type": "string"
+            },
+            {
+              "id": "ad1071cd-5a2c-4041-ba71-fabc2b9987aa",
+              "name": "Sector",
+              "value": "= {{ $json[Object.keys($json).find(k => k.startsWith('What sector'))] }}",
+              "type": "string"
+            },
+            {
+              "id": "7cb9c13b-bedc-4f5d-8df5-89a2e9639bf8",
+              "name": "Interest note",
+              "value": "={{ $json[Object.keys($json).find(k => k.startsWith('What would'))] }}",
+              "type": "string"
+            },
+            {
+              "id": "c5dbcd6e-6c1a-4c96-a8b0-704c01107b61",
+              "name": "Stage",
+              "value": "New",
+              "type": "string"
+            },
+            {
+              "id": "8b8c7ddd-5b56-47d7-a0da-d6f6af4820c0",
+              "name": "Last Contact Date",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "4bc10a76-5d7b-4837-ac64-0433cfc1c30e",
+              "name": "Next Follow-up Date",
+              "value": "={{ $now.plus({ days: 2 }).toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "2b2ebe85-2fbd-4af8-91fe-d3a797093a73",
+              "name": "Notes",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "07aaeee4-06b0-46e7-a3bf-77f427bf50ba",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1GJiLpYCt7dk2iKMUEwH6oehbD4sCGzzYEM6ZftdyB3s",
+          "mode": "list",
+          "cachedResultName": "Leads Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GJiLpYCt7dk2iKMUEwH6oehbD4sCGzzYEM6ZftdyB3s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GJiLpYCt7dk2iKMUEwH6oehbD4sCGzzYEM6ZftdyB3s/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Contact",
+              "displayName": "Contact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Sector",
+              "displayName": "Sector",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Interest note",
+              "displayName": "Interest note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Stage",
+              "displayName": "Stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Last Contact Date",
+              "displayName": "Last Contact Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Next Follow-up Date",
+              "displayName": "Next Follow-up Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        416,
+        0
+      ],
+      "id": "0ca85fcc-02ea-4feb-8b56-2770232b4aca",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DX9u6N1QudjzDKYt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7876719873",
+        "text": "=🚨 NEW LEAD  \n👤 Name: {{$json.Name}} \n📞 Contact: {{$json.Contact}}  \n💼 Source: {{$json.Source}} \n🏭 Sector: {{$json.Sector}}  \n🤖 Interested in: {{$json[\"Interest note\"]}}  \n📌 Stage: {{$json.Stage}} \n📅 Follow-up: {{$json[\"Next Follow-up Date\"]}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        640,
+        0
+      ],
+      "id": "a63ac126-0aa4-447f-88c9-655277820cf2",
+      "name": "Send a text message",
+      "webhookId": "91671634-b958-4724-a358-aae978a2c5be",
+      "credentials": {
+        "telegramApi": {
+          "id": "vLgyhbO03v0OXSCu",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8e051f09-710b-4fc6-ba76-ae8fc0ef3b98",
+              "leftValue": "={{ $('Edit Fields').item.json.Contact }}",
+              "rightValue": "@",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        864,
+        0
+      ],
+      "id": "f9cd5236-f0fe-489d-a37b-45546819f5ea",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Append row in sheet').item.json.Contact.trim() }}",
+        "subject": "Thanks for reaching out. We've received your request",
+        "emailType": "text",
+        "message": "=Hello {{ $('Append row in sheet').item.json.Name }},  \nThanks for reaching out! We've received your automation request and will get back to you within 48 hours.  In the meantime, feel free to reply to this email if you'd like to add anything.  \n\nBest regards, \nSteve",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        -48
+      ],
+      "id": "e60a3ac7-a335-43c9-bfc8-3a623048e384",
+      "name": "Send a message",
+      "webhookId": "e03209ea-ddbb-4895-9fd9-4dea1f2ff671",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "cEHuSaLfJGbTaEIp",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7876719873",
+        "text": "=⚠️ MANUAL ACTION REQUIRED {{ $('Append row in sheet').item.json.Name }} did not leave an email address.  Contact them manually on WhatsApp/Phone: {{ $('Append row in sheet').item.json.Contact }}   Interested in: {{ $('Append row in sheet').item.json['Interest note'] }} ",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        96
+      ],
+      "id": "32225d16-1a37-4777-999d-4880b7c928b3",
+      "name": "Send a text message1",
+      "webhookId": "b5e680af-4956-4396-9fbc-3a8c8c84d80f",
+      "credentials": {
+        "telegramApi": {
+          "id": "vLgyhbO03v0OXSCu",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "dynamic",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "5984fca6-f492-4264-ba2e-fa6e429d86f2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b665cb047bd9e1e2f104431a15367fbc56cea2c74cd7e4d0795661a9356d507b"
+  },
+  "nodeGroups": [],
+  "id": "eAUXgCBDSFJQ6wMX",
+  "tags": []
+}
